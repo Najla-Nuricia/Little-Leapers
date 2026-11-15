@@ -3,10 +3,6 @@ using UnityEngine;
 
 public class GemCollect : MonoBehaviour
 {
-    [Header("Sound Effect")]
-    [SerializeField] private AudioClip collectSFX;
-    [SerializeField] private float sfxVolume = 1f;
-
     private bool isCollected = false;
 
     private void OnTriggerEnter(Collider other)
@@ -24,13 +20,9 @@ public class GemCollect : MonoBehaviour
             }
 
             // Play collection sound
-            if (collectSFX != null)
+            if (MusicManager.Instance != null)
             {
-                AudioSource.PlayClipAtPoint(
-                    collectSFX,
-                    transform.position,
-                    sfxVolume
-                );
+                MusicManager.Instance.PlayGemSFX();
             }
 
             // Destroy gem
