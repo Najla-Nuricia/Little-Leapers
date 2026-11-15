@@ -11,6 +11,7 @@ public class MusicManager : MonoBehaviour
     [SerializeField] private AudioClip jumpSFX;
     [SerializeField] private AudioClip checkpointSFX;
     [SerializeField] private AudioClip deathSFX;
+    [SerializeField] private AudioClip hoverSFX;
 
     [Header("Audio Sources")]
     [SerializeField] private AudioSource bgmSource;
@@ -78,4 +79,12 @@ public class MusicManager : MonoBehaviour
     {
         sfxSource.volume = volume;
     }
+
+    public void PlayHoverSFX()
+{
+    if (hoverSFX != null && sfxSource != null)
+    {
+        sfxSource.PlayOneShot(hoverSFX);
+    }
+}
 }
