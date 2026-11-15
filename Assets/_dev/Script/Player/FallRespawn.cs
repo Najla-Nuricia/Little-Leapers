@@ -6,17 +6,16 @@ public class FallRespawn : MonoBehaviour
     [Header("Respawn Settings")]
     [SerializeField] private float fallThreshold = -10f;
 
-    private Vector3 startPosition;
-    private Quaternion startRotation;
-
-    private CharacterController characterController;
+    private PlayerCheckpoint playerCheckpoint;
 
     private void Start()
     {
-        startPosition = transform.position;
-        startRotation = transform.rotation;
+        playerCheckpoint = GetComponent<PlayerCheckpoint>();
 
-        characterController = GetComponent<CharacterController>();
+        if (playerCheckpoint == null)
+        {
+            Debug.LogError("PlayerCheckpoint belum dipasang!");
+        }
     }
 
     private void Update()
@@ -29,17 +28,9 @@ public class FallRespawn : MonoBehaviour
 
     private void Respawn()
     {
-        if (characterController != null)
+        if (playerCheckpoint != null)
         {
-            characterController.enabled = false;
-        }
-
-        transform.position = startPosition;
-        transform.rotation = startRotation;
-
-        if (characterController != null)
-        {
-            characterController.enabled = true;
+            playerCheckpoint.Respawn();
         }
     }
 }
