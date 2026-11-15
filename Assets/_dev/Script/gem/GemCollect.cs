@@ -1,23 +1,29 @@
+
 using UnityEngine;
 
-public class GemRotator : MonoBehaviour
+public class GemCollect : MonoBehaviour
 {
-    [Header("Rotation")]
-    [SerializeField] private float rotationSpeed = 100f;
-
     [Header("Sound Effect")]
     [SerializeField] private AudioClip collectSFX;
     [SerializeField] private float sfxVolume = 1f;
 
-    private void Update()
-    {
-        transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
-    }
+    private bool isCollected = false;
 
     private void OnTriggerEnter(Collider other)
     {
+        if (isCollected) return;
+
         if (other.CompareTag("Player"))
         {
+            isCollected = true;
+
+            // Add gem counter
+            if (GemCounter.Instance != null)
+            {
+                GemCounter.Instance.AddGem();
+            }
+
+            // Play collection sound
             if (collectSFX != null)
             {
                 AudioSource.PlayClipAtPoint(
@@ -27,6 +33,7 @@ public class GemRotator : MonoBehaviour
                 );
             }
 
+            // Destroy gem
             Destroy(gameObject);
         }
     }

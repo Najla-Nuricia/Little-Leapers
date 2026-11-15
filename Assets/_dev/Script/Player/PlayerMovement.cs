@@ -23,9 +23,27 @@ public class PlayerMovement : MonoBehaviour
     [Header("Jump Settings")]
     public float gravity = -9.8f;
     public float jumpHeight = 5.0f;
+    public int maxJumps = 2;
 
     private float verticalVelocity = 0f;
+    private int jumpsUsed = 0;
+
     private Vector2 playerMoveAmount;
+
+    [Header("Dash Settings")]
+    public float dashSpeed = 15f;
+    public float dashDuration = 0.2f;
+    public float dashCooldown = 0.5f;
+    public float doubleTapTime = 0.3f;
+
+    private float lastForwardTapTime = -1f;
+    private float dashTimer = 0f;
+    private float lastDashTime = -1f;
+
+    private bool wasForwardPressed = false;
+    private bool isDashing = false;
+
+    private Vector3 dashDirection;
 
     private void Awake()
     {
@@ -49,23 +67,43 @@ public class PlayerMovement : MonoBehaviour
     {
         playerMoveAmount = playerMoveAction.ReadValue<Vector2>();
 
-        PlayerMoveAndRotate();
+        DetectDoubleTapDash();
+
         Jump();
+
+        PlayerMoveAndRotate();
     }
+
+    // =========================
+    // MOVEMENT
+    // =========================
 
     private void PlayerMoveAndRotate()
     {
+        Vector3 verticalMove = Vector3.up * verticalVelocity * Time.deltaTime;
+
+        if (isDashing)
+        {
+            dashTimer -= Time.deltaTime;
+
+            playerCharacterController.Move(
+                dashDirection * dashSpeed * Time.deltaTime
+                + verticalMove
+            );
+
+            if (dashTimer <= 0f)
+            {
+                isDashing = false;
+            }
+
+            return;
+        }
+
         Vector3 playerDirection = new Vector3(
             playerMoveAmount.x,
             0f,
             playerMoveAmount.y
         ).normalized;
-
-        Vector3 verticalMove = new Vector3(
-            0f,
-            verticalVelocity,
-            0f
-        ) * Time.deltaTime;
 
         if (playerDirection.magnitude >= 0.1f)
         {
@@ -106,16 +144,60 @@ public class PlayerMovement : MonoBehaviour
     {
         if (playerCharacterController.isGrounded)
         {
-            verticalVelocity = -1f;
-
-            if (playerJumpAction.WasPressedThisFrame())
+            if (verticalVelocity < 0f)
             {
-                verticalVelocity = jumpHeight;
+                verticalVelocity = -1f;
             }
+
+            jumpsUsed = 0;
         }
         else
         {
             verticalVelocity += gravity * Time.deltaTime;
         }
+
+        if (playerJumpAction.WasPressedThisFrame() && jumpsUsed < maxJumps)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+
+            jumpsUsed++;
+        }
+    }
+
+    private void DetectDoubleTapDash()
+    {
+        bool forwardPressed = playerMoveAmount.y > 0.5f;
+
+        // Detect W key press (rising edge)
+        if (forwardPressed && !wasForwardPressed)
+        {
+            float currentTime = Time.time;
+
+            if (currentTime - lastForwardTapTime <= doubleTapTime)
+            {
+                TryDash();
+                lastForwardTapTime = -1f;
+            }
+            else
+            {
+                lastForwardTapTime = currentTime;
+            }
+        }
+
+        wasForwardPressed = forwardPressed;
+    }
+
+    private void TryDash()
+    {
+        if (isDashing) return;
+
+        if (Time.time - lastDashTime < dashCooldown) return;
+
+        isDashing = true;
+        dashTimer = dashDuration;
+        lastDashTime = Time.time;
+
+        // Dash according to player's facing direction
+        dashDirection = transform.forward;
     }
 }
